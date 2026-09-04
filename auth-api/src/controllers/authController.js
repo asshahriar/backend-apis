@@ -12,11 +12,15 @@ export const registerUser = async (req, res) => {
 				error: result.error.issues,
 			});
 		}
-		const { name, email, password } = result.body;
+		const { name, email, password } = result.data;
 
 		const existingUser = await User.findOne({ email });
 		const passwordHash = await bcrypt.hash(password, 10);
-
+		if (existingUser) {
+			return res.status(409).json({
+				message: "Email is already registered",
+			});
+		}
 		const user = await User.create({
 			name,
 			email,
@@ -30,17 +34,11 @@ export const registerUser = async (req, res) => {
 				email: user.email,
 			},
 		});
-
-		if (existingUser) {
-			return res.status(409).json({
-				message: "Email is already registered",
-			});
-		}
 	} catch (error) {
 		console.error(error);
 
 		return res.status(500).json({
-			message: 'internal server error'
-		})
+			message: "internal server error",
+		});
 	}
 };
